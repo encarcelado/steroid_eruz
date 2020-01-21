@@ -1,84 +1,173 @@
-#print("hello2")
+#скрипт забирает все данные ЕРУЗ и закидывает их в MySQL
 
 import bs4 as bs
 import urllib.request
 
-sauce = urllib.request.urlopen("https://zakupki.gov.ru/epz/eruz/card/general-information.html?reestrNumber=20008985").read()
-content = sauce.decode("utf-8")
+startEruzNum = 19000001
+endEruzNum = 19450000
 
-#print(content)
+while startEruzNum < endEruzNum:
+    startEruzNumString = str(startEruzNum)
+    eruzLink = "https://zakupki.gov.ru/epz/eruz/card/general-information.html?reestrNumber=" + startEruzNumString
+    sauce = urllib.request.urlopen(eruzLink).read()
+    content = sauce.decode("utf-8")
 
-#soup = bs.BeautifulSoup(content, "html.parser")
-soup = bs.BeautifulSoup(content, "lxml")
-print(soup.title.text) #or string
-
-#match = soup.find("td", class_="noticeTdFirst fontBoldTextTd").text
-#match = soup.td.text[15]
-#match = soup.find_all("td").text
-
-#address = soup.find_all("td", class_="noticeTdFirst fontBoldTextTd")
-#print(address[1].text)
-
-#address = soup.find("td", class_="noticeTdFirst fontBoldTextTd")
-#print(address.next_sibling.next_sibling.text)
-
-eruzNum = soup.find("span", text="Номер реестровой записи в ЕРУЗ").next_sibling.next_sibling.text
-print(eruzNum)
+    #print(content)
 
 
-statusReg = soup.find("span", text="Статус регистрации").next_sibling.next_sibling.text
-print(statusReg)
+    #soup = bs.BeautifulSoup(content, "html.parser")
+    soup = bs.BeautifulSoup(content, "lxml")
+    zapisNeNaidena = soup.find("h2").text
 
-tipUchastnika = soup.find("span", text="Тип участника закупки").next_sibling.next_sibling.text
-print(tipUchastnika)
+#Если "Запись не найдена", переходил на следующую
 
-dataReg = soup.find("span", text="Дата регистрации в ЕИС").next_sibling.next_sibling.text
-print(dataReg)
+    if zapisNeNaidena == "Запись не найдена":
+        startEruzNum = startEruzNum + 1
+        continue
 
-fullCompanyName = soup.find("span", text="Полное наименование").next_sibling.next_sibling.text.title()
-print(fullCompanyName)
+    tipUchastnika = soup.find("span", text="Тип участника закупки").next_sibling.next_sibling.text
 
-shortCompanyName = soup.find("span", text="Сокращенное наименование").next_sibling.next_sibling.text
-print(shortCompanyName)
+#Если субъект Физлицо РФ или ИП, то отдельная собиралка
 
-companyAddress = soup.find("span", text="Адрес в пределах места нахождения").next_sibling.next_sibling.text.title()
-print(companyAddress)
+    if tipUchastnika == "Физическое лицо РФ" or tipUchastnika == "Физическое лицо РФ (индивидуальный предприниматель)":
+        print(soup.title.text)  # or string
+        print(startEruzNumString)
 
-companyOkveds = soup.find("span", text="Код(ы) ОКВЭД").next_sibling.next_sibling
+        eruzNum = soup.find("span", text="Номер реестровой записи в ЕРУЗ").next_sibling.next_sibling.text
+        print(eruzLink)
+
+        statusReg = soup.find("span", text="Статус регистрации").next_sibling.next_sibling.text
+        print(statusReg)
+
+        print(tipUchastnika)
+
+        dataReg = soup.find("span", text="Дата регистрации в ЕИС").next_sibling.next_sibling.text
+        print(dataReg)
+
+        personINN = soup.find("span", text="ИНН").next_sibling.next_sibling.text.strip()
+        print(personINN)
+
+        bossFullName= soup.find("span", text="ФИО").next_sibling.next_sibling.text.strip()
+        print(bossFullName)
+
+        bossFullNameSplit = bossFullName.split()
+        bossLastName = bossFullNameSplit[0]
+        bossFirstName = bossFullNameSplit[1]
+        bossSecondName = bossFullNameSplit[2]
+
+        print(bossFirstName, bossSecondName, bossLastName, personINN)
+
+        OGRNIP = soup.find("span", text="ОГРНИП").next_sibling.next_sibling.text.strip()
+        print(OGRNIP)
+
+        nalogDate = soup.find("span", text="Дата постановки на учет в налоговом органе").next_sibling.next_sibling.text.strip()
+        print(nalogDate)
+
+        ipRegDate = soup.find("span", text="Дата регистрации индивидуального предпринимателя").next_sibling.next_sibling.text.strip()
+        print(ipRegDate)
+
+        companyEmail = soup.find("span", text="Адрес электронной почты").next_sibling.next_sibling.text.replace(" ", "")
+        print(companyEmail)
+
+        startEruzNum = startEruzNum + 1
+        continue
 
 
-#singleOkved = companyOkveds2.find_all("div")
+    print(soup.title.text) #or string
 
-#print(singleOkved[0].text)
+    print(startEruzNumString)
 
-for singleOkved in companyOkveds.find_all("div"):
-    print(singleOkved.text)
+    eruzNum = soup.find("span", text="Номер реестровой записи в ЕРУЗ").next_sibling.next_sibling.text
+    print(eruzLink)
+
+    statusReg = soup.find("span", text="Статус регистрации").next_sibling.next_sibling.text
+    print(statusReg)
+
+    print(tipUchastnika)
+
+    dataReg = soup.find("span", text="Дата регистрации в ЕИС").next_sibling.next_sibling.text
+    print(dataReg)
+
+    try:
+        fullCompanyName = soup.find("span", text="Полное наименование").next_sibling.next_sibling.text.title()
+        print(fullCompanyName)
+    except AttributeError:
+        fullCompanyName = ""
+        print("Полное имя не опубликовано")
+
+    try:
+        shortCompanyName = soup.find("span", text="Сокращенное наименование").next_sibling.next_sibling.text
+        print(shortCompanyName)
+    except AttributeError:
+        shortCompanyName = ""
+        print("Короткое имя не опубликовано")
+
+    companyAddress = soup.find("span", text="Адрес в пределах места нахождения").next_sibling.next_sibling.text.title()
+    print(companyAddress)
+
+    companyOkveds = soup.find("span", text="Код(ы) ОКВЭД").next_sibling.next_sibling
 
 
 
 
-companyINN = soup.find("span", text="ИНН").next_sibling.next_sibling.text.strip()
-print(companyINN)
 
-companyKPP = soup.find("span", text="КПП").next_sibling.next_sibling.text.strip()
-print(companyKPP)
 
-companyRegDate = soup.find("span", text="Дата постановки на учет в налоговом органе").next_sibling.next_sibling.text.strip()
-print(companyRegDate)
+    for singleOkved in companyOkveds.find_all("div"):
+        print(singleOkved.text)
 
-companyOGRN = soup.find("span", text="ОГРН").next_sibling.next_sibling.text.strip()
-print(companyOGRN)
+    #singleOkved2 = companyOkveds.find_all("div")
+    #print("One Okved")
+    #print(singleOkved2[1].text)
 
-bossFullName = soup.find("td", class_="tableBlock__col").text.title()
-bossTitle = soup.find("td", class_="tableBlock__col").next_sibling.next_sibling.text.title()
-bossINN = soup.find("td", class_="tableBlock__col").next_sibling.next_sibling.next_sibling.next_sibling.text
-print(bossFullName, bossTitle, bossINN)
 
-companyEmail = soup.find("span", text="Адрес электронной почты").next_sibling.next_sibling.text.replace(" ", "")
-print(companyEmail)
 
-companyPhone = soup.find("span", text="Контактный телефон").next_sibling.next_sibling.text.replace(" ", "")
-print(companyPhone)
+
+    companyINN = soup.find("span", text="ИНН").next_sibling.next_sibling.text.strip()
+    print(companyINN)
+
+    companyKPP = soup.find("span", text="КПП").next_sibling.next_sibling.text.strip()
+    print(companyKPP)
+
+    companyRegDate = soup.find("span", text="Дата постановки на учет в налоговом органе").next_sibling.next_sibling.text.strip()
+    print(companyRegDate)
+
+    companyOGRN = soup.find("span", text="ОГРН").next_sibling.next_sibling.text.strip()
+    print(companyOGRN)
+
+    bossFullName = soup.find("td", class_="tableBlock__col").text.title()
+
+    bossFullNameSplit = bossFullName.split()
+    bossLastName = bossFullNameSplit[0]
+    bossFirstName = bossFullNameSplit[1]
+    bossSecondName = bossFullNameSplit[2]
+
+
+
+
+    bossTitle = soup.find("td", class_="tableBlock__col").next_sibling.next_sibling.text.title()
+    personINN = soup.find("td", class_="tableBlock__col").next_sibling.next_sibling.next_sibling.next_sibling.text
+    print(bossFirstName, bossSecondName, bossLastName, bossTitle, personINN)
+
+    companyEmail = soup.find("span", text="Адрес электронной почты").next_sibling.next_sibling.text.replace(" ", "")
+    print(companyEmail)
+
+    companyPhone = soup.find("span", text="Контактный телефон").next_sibling.next_sibling.text.replace(" ", "")
+    print(companyPhone)
+
+
+    try:
+        companySite = soup.find("span", text="Адрес сайта в сети интернет").next_sibling.next_sibling.text.replace(" ", "")
+        print(companySite)
+    except AttributeError:
+        companySite = ""
+        print("Название сайта не опубликовано")
+
+
+
+ #   companySite = soup.find("span", text="Адрес сайта в сети интернет").next_sibling.next_sibling.text.replace(" ", "")
+ #   print(companySite)
+
+    startEruzNum = startEruzNum + 1
 
 
 
