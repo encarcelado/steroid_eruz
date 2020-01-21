@@ -3,7 +3,10 @@
 import bs4 as bs
 import urllib.request
 
-startEruzNum = 19000001
+startEruzNum = open('startEruzNum.txt', 'r').read()
+startEruzNum = int(startEruzNum)
+#print(startEruzNumFromText)
+#startEruzNum = 19000001
 endEruzNum = 19450000
 
 while startEruzNum < endEruzNum:
@@ -163,25 +166,8 @@ while startEruzNum < endEruzNum:
         print("Название сайта не опубликовано")
 
 
-
- #   companySite = soup.find("span", text="Адрес сайта в сети интернет").next_sibling.next_sibling.text.replace(" ", "")
- #   print(companySite)
-
     startEruzNum = startEruzNum + 1
 
 
 
 
-
-
-
-#address = soup.find(class_="odd")
-#print(address)
-#address2 = address.find_all("td")
-#print(address2[0].text)
-
-
-#for match1 in match
- #   if "Номер" in match1.next:
- #       print(match1)
-#print(match)
