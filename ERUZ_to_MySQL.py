@@ -2,12 +2,40 @@
 
 import bs4 as bs
 import urllib.request
+#import os
+import mysql.connector
+
+mydb = mysql.connector.connect(host="v0434826.beget.tech", user="v0434826_eruz", passwd="1560ford", database = "v0434826_eruz")
+
+print(mydb)
+
+if(mydb):
+    print("Connection is successful")
+else:
+    print("Connection is unsuccessful")
+
+my_cursor = mydb.cursor()
+
+my_cursor.execute("SHOW TABLES")
+for table in my_cursor:
+    print(table[0])
+
+my_cursor.execute("SELECT * FROM realaddress WHERE region_code = 02")
+
+for table in my_cursor:
+    print(table)
 
 startEruzNum = open('startEruzNum.txt', 'r').read()
-startEruzNum = int(startEruzNum)
+
 #print(startEruzNumFromText)
 #startEruzNum = 19000001
 endEruzNum = 19450000
+if not startEruzNum:
+    startEruzNum = open('startEruzNumBackup.txt', 'r').read()
+
+
+startEruzNum = int(startEruzNum)
+
 
 while startEruzNum < endEruzNum:
     startEruzNumString = str(startEruzNum)
@@ -73,6 +101,11 @@ while startEruzNum < endEruzNum:
         print(companyEmail)
 
         startEruzNum = startEruzNum + 1
+        startEruzNumString = str(startEruzNum)
+        # os.remove("startEruzNum.txt")
+        f = open("startEruzNum.txt", "w")
+        f.write(startEruzNumString)
+        f.close()
         continue
 
 
@@ -137,19 +170,26 @@ while startEruzNum < endEruzNum:
     companyOGRN = soup.find("span", text="ОГРН").next_sibling.next_sibling.text.strip()
     print(companyOGRN)
 
-    bossFullName = soup.find("td", class_="tableBlock__col").text.title()
-
-    bossFullNameSplit = bossFullName.split()
-    bossLastName = bossFullNameSplit[0]
-    bossFirstName = bossFullNameSplit[1]
-    bossSecondName = bossFullNameSplit[2]
 
 
+    try:
+        bossFullName = soup.find("td", class_="tableBlock__col").text.title()
+
+        bossFullNameSplit = bossFullName.split()
+        bossLastName = bossFullNameSplit[0]
+        bossFirstName = bossFullNameSplit[1]
+        bossSecondName = bossFullNameSplit[2]
+        bossTitle = soup.find("td", class_="tableBlock__col").next_sibling.next_sibling.text.title()
+        personINN = soup.find("td", class_="tableBlock__col").next_sibling.next_sibling.next_sibling.next_sibling.text
+        print(bossFirstName, bossSecondName, bossLastName, bossTitle, personINN)
+    except AttributeError:
+        bossFullNameSplit = ""
+        bossLastName = ""
+        bossFirstName = ""
+        bossSecondName = ""
+        print("Данные о руководителе не опубликованы")
 
 
-    bossTitle = soup.find("td", class_="tableBlock__col").next_sibling.next_sibling.text.title()
-    personINN = soup.find("td", class_="tableBlock__col").next_sibling.next_sibling.next_sibling.next_sibling.text
-    print(bossFirstName, bossSecondName, bossLastName, bossTitle, personINN)
 
     companyEmail = soup.find("span", text="Адрес электронной почты").next_sibling.next_sibling.text.replace(" ", "")
     print(companyEmail)
@@ -167,6 +207,13 @@ while startEruzNum < endEruzNum:
 
 
     startEruzNum = startEruzNum + 1
+    startEruzNumString = str(startEruzNum)
+    #os.remove("startEruzNum.txt")
+    f = open("startEruzNum.txt", "w")
+    f.write(startEruzNumString)
+    f = open("startEruzNumBackup.txt", "w")
+    f.write(startEruzNumString)
+    f.close()
 
 
 
