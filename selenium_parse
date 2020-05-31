@@ -1,0 +1,108 @@
+from selenium import webdriver
+import time
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import Select
+from selenium.common.exceptions import NoSuchElementException
+import unittest, time, re
+from selenium.webdriver.common.proxy import *
+
+PATH = "chromedriver.exe"
+
+
+# class Testrobot2(unittest.TestCase):
+#     def setUp(self):
+#
+#         myProxy = "188.170.62.89:8080"
+#
+#         proxy = Proxy({
+#         'proxyType': ProxyType.MANUAL,
+#         'httpProxy': myProxy,
+#         'ftpProxy': myProxy,
+#         'sslProxy': myProxy,
+#         'noProxy':''})
+#
+#         self.driver = webdriver.Firefox(proxy=proxy)
+#         self.driver.implicitly_wait(30)
+#         self.base_url = "https://www.google.ie/"
+#         self.verificationErrors = []
+#         self.accept_next_alert = True
+#
+#     def test_robot2(self):
+#         driver = self.driver
+#         driver.get(self.base_url + "/#gs_rn=17&gs_ri=psy-ab&suggest=p&cp=6&gs_id=ix&xhr=t&q=selenium&es_nrs=true&pf=p&output=search&sclient=psy-ab&oq=seleni&gs_l=&pbx=1&bav=on.2,or.r_qf.&bvm=bv.47883778,d.ZGU&fp=7c0d9024de9ac6ab&biw=592&bih=665")
+#         driver.find_element_by_id("gbqfq").clear()
+#         driver.find_element_by_id("gbqfq").send_keys("selenium")
+#
+#     def is_element_present(self, how, what):
+#         try: self.driver.find_element(by=how, value=what)
+#         except NoSuchElementException, e: return False
+#         return True
+#
+#     def is_alert_present(self):
+#         try: self.driver.switch_to_alert()
+#         except: NoAlertPresentException, e: return False
+#         return True
+#
+#     def close_alert_and_get_its_text(self):
+#         try:
+#             alert = self.driver.switch_to_alert()
+#             alert_text = alert.text
+#             if self.accept_next_alert:
+#                 alert.accept()
+#             else:
+#                 alert.dismiss()
+#             return alert_text
+#         finally: self.accept_next_alert = True
+#
+#     def tearDown(self):
+#         self.driver.quit()
+#         self.assertEqual([], self.verificationErrors)
+
+
+myProxy = "188.170.62.89:8080"
+
+proxy = Proxy({
+'proxyType': ProxyType.MANUAL,
+'httpProxy': myProxy,
+'ftpProxy': myProxy,
+'sslProxy': myProxy,
+'noProxy':''})
+
+# driver = webdriver.Chrome(proxy=proxy)
+
+driver = webdriver.Chrome(PATH)
+
+# driver.get("http://rusprofile.ru")
+#
+# time.sleep(5)
+
+driver.get("https://online.sbis.ru/auth/")
+time.sleep(1)
+print(driver.title)
+login = driver.find_element_by_name("login")
+login.send_keys("yanzakova")
+password = driver.find_element_by_name("password")
+password.send_keys("100%pobed")
+button = driver.find_element_by_class_name("auth-Form__submit")
+time.sleep(1)
+button.send_keys(Keys.RETURN)
+time.sleep(3)
+input = driver.find_element_by_name("input")
+input.send_keys("3662270325")
+time.sleep(1)
+input.send_keys(Keys.RETURN)
+time.sleep(1)
+element_to_hover_over = driver.find_element_by_class_name("contractor-common-Templates__mainCell")
+hover = ActionChains(driver).move_to_element(element_to_hover_over)
+hover.perform()
+time.sleep(1)
+hover.click()
+hover.perform()
+time.sleep(1)
+input.send_keys(Keys.RETURN)
+time.sleep(2)
+input.send_keys(Keys.RETURN)
+time.sleep(10)
+driver.quit()

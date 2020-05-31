@@ -1,15 +1,17 @@
 #скрипт забирает все данные ЕРУЗ и закидывает их в MySQL
 
 import bs4 as bs
-
-#import os
+from itertools import cycle
+import traceback
+import os
 import mysql.connector
 import re
 import time
 from colorama import Fore, Back, Style
-# from datetime import date
 import datetime
 import sys
+# import urllib
+import socket
 import requests
 from fake_useragent import UserAgent
 import random
@@ -17,14 +19,37 @@ from fp.fp import FreeProxy
 
 ua = UserAgent()
 # CREATES PROXY FOR RUSPROFILE MINING
+# http://list.didsoft.com/get?email=vadimkhar@mail.ru&pass=qhgiqs&pid=socks1100&showcountry=no
+
+# def check_in():
+#
+#     fqn = os.uname()[1]
+#     ext_ip = urllib.urlopen('http://whatismyip.org').read()
+#     print("Asset: %s " % fqn, "Checking in from IP#: %s " % ext_ip)
+
 # def GetProxy():
-#     proxyDict = {}
-#     proxy = FreeProxy(rand=True).get()
-#     print(proxy)
-#     proxyDict['http'] = proxy
-#     proxyDict['https'] = proxy
-#     return proxyDict
-# # END PROXY FOR RUSPROFILE MINING
+#     url = 'http://list.didsoft.com/get?email=vadimkhar@mail.ru&pass=qhgiqs&pid=socks1100&showcountry=no'
+#     url = 'http://list.didsoft.com/get?email=vadimkhar@mail.ru&pass=qhgiqs&pid=socks1100&showcountry=no&country=RU'
+#     response2 = requests.get(url)
+#     parser = response2.text
+#     parser = parser.splitlines()
+#     proxies = set()
+#
+#     for e in parser:
+#         e = e.strip('#socks4')
+#         e = e.split(":")
+#         # print(e[0], e[1])
+#         proxy = ":".join([e[0], e[1]])
+#         proxies.add(proxy)
+#
+#     # print(proxies)
+#     # proxyDict = {}
+#     # proxy = FreeProxy(rand=True).get()
+#     # print(proxy)
+#     # proxyDict['http'] = proxy
+#     # proxyDict['https'] = proxy
+#     return proxies
+# END PROXY FOR RUSPROFILE MINING
 #
 #
 #
@@ -36,96 +61,161 @@ ua = UserAgent()
 #
 #########FUNCTION ADDS MAIN OKVED AND MAIN OKVED DESCRIPTION FROM RUSPROFILE.RU TO NEW ERUZ ENTRIES AND OLD ERUZ ENTRIES
 def GetMainOkved(eruzNumSent, eruzAlreadyRegistered, companyINN, eruzRegistryID):
-    return None
-#     if eruzAlreadyRegistered == True:
-#         try:
-#             sql5 = "SELECT main_okved FROM eruz_member WHERE eruz_registry_id = %s"
-#             my_cursor.execute(sql5, (eruzNumSent,))
-#             mainOkved = my_cursor.fetchone()[0]
-#             # print("Главный ОКВЭД уже существует в реестре под №", mainOkved)
-#             # return None
-#         except:
-#             print("Главного ОКВЭДа у записи " + eruzNumSent + "нет, поэтому ищем")
-#
-#     if mainOkved == "0" or not mainOkved:
-#         print("Главный ОКВЭД не существует в реестре для записи ЕРУЗ " + eruzNumSent)
-#     else:
-#         print("Главный ОКВЭД уже существует в реестре под №", mainOkved)
-#         return None
-#
-#     if not companyINN or companyINN == "0":
-#         try:
-#             sql5 = "SELECT eruz_member_inn FROM eruz_member WHERE eruz_registry_id = %s"
-#             my_cursor.execute(sql5, (eruzNumSent,))
-#             companyINN = my_cursor.fetchone()[0]
-#             print("ИНН члена ЕРУЗ = ", companyINN)
-#
-#         except:
-#             print("ИНН компании у записи " + eruzNumSent + "нет, поэтому бросаем затею с главным ОКВЭДОМ для этой записи")
-#             return None
-#
-#
-#     rusProfileLink = "https://www.rusprofile.ru/search?query=" + companyINN + "&type=ul&search_inactive=2"
-#
-#     # wait = random.randint(10, 15)
-#     # time.sleep(wait)
-#     try:
-#
-#         headers2 = {'User-Agent': str(ua.random)}
-#         response2 = requests.get(rusProfileLink, headers=headers2, timeout=5)
-#
-#     except requests.exceptions.Timeout:
-#         # time.sleep(10)
-#         # sauce = urllib.request.urlopen(eruzLink).read()
-#
-#         headers2 = {'User-Agent': str(ua.random)}
-#         response2 = requests.get(rusProfileLink, headers=headers2, timeout=5)
-#
-#     except:
-#
-#         print("сайт rusprofile не прочитался, поэтому облом с главным ОКВЭД")
-#         return None
-#
-#     if response2.ok:
-#         s2 = response2.content
-#         # print(s2)
-#     else:
-#
-#         print("сайт rusprofile не прочитался, поэтому облом с главным ОКВЭД 2")
-#         return None
-#
-#     soup2 = bs.BeautifulSoup(s2, "lxml")
-#     mainOkvedFull = ""
-#
-#     mainOkvedFull2 = soup2.find("span", class_="company-info__title", text="Основной вид деятельности").next_sibling.text.strip()
-#     print("Nothing " + mainOkvedFull2)
-#
-#     try:
-#         mainOkvedFull = soup2.find("span", class_="company-info__title", text="Основной вид деятельности").next_sibling.next_sibling.text.strip()
-#         # print(mainOkvedFull)
-#     except:
-#         mainOkvedFull = ""
-#
-#     if not mainOkvedFull:
-#         print("Главный ОКВЭД не нашелся")
-#         return None
-#     mainOkvedDesc2 = ""
-#     mainOkvedNum2 = ""
-#     mainOkvedDesc2 = re.findall(r"^.*", mainOkvedFull)
-#     mainOkvedNum2 = re.findall(r"(?<=\().*(?=\))", mainOkvedFull)
-#     mainOkvedDesc2 = mainOkvedDesc2[0].strip()
-#     mainOkvedNum2 = mainOkvedNum2[0].strip()
-#     print("Описание Оквэда: " + mainOkvedDesc2)
-#     print("Оквэд: " + mainOkvedNum2)
-#
-#     if mainOkvedNum2:
-#         try:
-#             sql5 = "UPDATE eruz_member SET main_okved = %s, main_okved_desc = %s  WHERE id = %s"
-#             my_cursor.execute(sql5, (mainOkvedNum2, mainOkvedDesc2, eruzRegistryID))
-#         except:
-#             print("Что-то пошло не так и главный ОКВЭД с опианием добавлен не был")
-#             return None
-#
+    # return None
+    mainOkved2 = ""
+    if eruzAlreadyRegistered == True:
+        try:
+            sql5 = "SELECT main_okved FROM eruz_member WHERE eruz_registry_id = %s"
+            my_cursor.execute(sql5, (eruzNumSent,))
+            mainOkved2 = my_cursor.fetchone()[0]
+            # print("Главный ОКВЭД уже существует в реестре под №", mainOkved2)
+            # return None
+        except:
+            print("Главного ОКВЭДа у записи " + eruzNumSent + "нет, поэтому ищем")
+
+    if mainOkved2 == "0" or not mainOkved2:
+        print("Главный ОКВЭД не существует в реестре для записи ЕРУЗ " + eruzNumSent)
+    else:
+        print("Главный ОКВЭД уже существует в реестре под №", mainOkved2)
+        return None
+
+    if not companyINN or companyINN == "0":
+        try:
+            sql5 = "SELECT eruz_member_inn FROM eruz_member WHERE eruz_registry_id = %s"
+            my_cursor.execute(sql5, (eruzNumSent,))
+            companyINN = my_cursor.fetchone()[0]
+            print("ИНН члена ЕРУЗ = ", companyINN)
+
+        except:
+            print("ИНН компании у записи " + eruzNumSent + "нет, поэтому бросаем затею с главным ОКВЭДОМ для этой записи")
+            return None
+
+
+    if len(companyINN) == 10:
+        rusProfileLink = "https://www.rusprofile.ru/search?query=" + companyINN + "&type=ul&search_inactive=2"
+        # rusProfileLink = "http://httpbin.org/ip"
+    else:
+        rusProfileLink = "https://www.rusprofile.ru/search?query=" + companyINN + "&search_inactive=2"
+        # rusProfileLink = "http://httpbin.org/ip"
+    # rusProfileLink = "https://www.rusprofile.ru/search?query=" + companyINN + "&search_inactive=2"
+    # rusProfileLink = "https://www.rusprofile.ru/search?query=" + companyINN + "&type=ul&search_inactive=2"
+    # rusProfileLink = "https://www.rusprofile.ru/search?query=" + companyINN
+    print(rusProfileLink)
+
+    wait = random.randint(10, 25)
+    time.sleep(wait)
+    proxies = ""
+    headers2 = {'User-Agent': str(ua.random)}
+    response2 = ""
+
+    # try:
+    #     proxies = GetProxy()
+    #     proxy_pool = cycle(proxies)
+    # except:
+    #     proxies = ""
+
+
+
+    # for i in range(1, 999):
+    #     proxy = next(proxy_pool)
+    #     proxy = {"http": "128.73.34.74:1080"}
+    #     print
+    #     response2 = ""
+    #     try:
+    #         # response2 = requests.get(rusProfileLink, headers=headers2, timeout=5, proxies={"http": proxy, "https": proxy})
+    #         response2 = requests.get(rusProfileLink, headers=headers2, timeout=5,
+    #                                  proxies=proxy)
+    #         print("Что-то прочиталось с первой попытки c прокси")
+    #         # print(response.json())
+    # 
+    #         break
+    #     except:
+    #         print(proxy)
+    #         print("Skipping. Connnection error")
+    #         response2 = ""
+    # print(check_in())
+
+    if not response2:
+        try:
+            response2 = requests.get(rusProfileLink, headers=headers2, timeout=5)
+            print("Что-то прочиталось с первой попытки без прокси")
+
+        except requests.exceptions.Timeout:
+            # time.sleep(10)
+            # sauce = urllib.request.urlopen(eruzLink).read()
+
+            headers2 = {'User-Agent': str(ua.random)}
+            response2 = requests.get(rusProfileLink, headers=headers2, timeout=5)
+            print("Что-то прочиталось со второй попытки без прокси")
+
+        except:
+
+            print("сайт rusprofile не прочитался, поэтому облом с главным ОКВЭД")
+            return None
+
+    if response2.ok:
+        s2 = response2.content
+        print("Ответ rusprofile в порядке, вроде")
+    else:
+
+        print("сайт rusprofile не прочитался, поэтому облом с главным ОКВЭД 2")
+        return None
+
+    soup2 = bs.BeautifulSoup(s2, "lxml")
+    mainOkvedFull = ""
+
+    # mainOkvedFull2 = soup2.find("span", class_="company-info__title", text="Основной вид деятельности").next_sibling.text.strip()
+    # print("Nothing " + mainOkvedFull2)
+    # try:
+    #     notAvailable = soup2.find("div", class_="error-code", text="HTTP ERROR 429").parent.text.strip()
+    #     print(notAvailable, " Делаем паузу")
+    #     wait = random.randint(25, 30)
+    #     time.sleep(wait)
+    # except:
+    #     notAvailable = ""
+
+
+    try:
+        mainOkvedFull = soup2.find("span", text=re.compile("\(\d{2}\.")).parent.text.strip()
+        print(mainOkvedFull)
+    except:
+        mainOkvedFull = ""
+
+    # try:
+    #     gosZakupkiRusprofile = soup2.find(text=re.compile("Госзакупки")).parent.parent.text.strip()
+    #     print(gosZakupkiRusprofile)
+    # except:
+    #     gosZakupkiRusprofile = ""
+
+
+    # if not mainOkvedFull:
+    #     try:
+    #         # mainOkvedFull = soup2.find("p", class_="tile-item__text").next_sibling.text.strip()
+    #         mainOkvedFull = soup2.find("span", text=re.compile("\(\d{2}\.")).parent.text.strip()
+    #         print(mainOkvedFull)
+    #     except:
+    #         mainOkvedFull = ""
+
+    if not mainOkvedFull:
+        print("Главный ОКВЭД все равно не нашелся")
+        return None
+    mainOkvedDesc2 = ""
+    mainOkvedNum2 = ""
+    mainOkvedDesc2 = re.findall(r"^.*", mainOkvedFull)
+    mainOkvedNum2 = re.findall(r"(?<=\().*(?=\))", mainOkvedFull)
+    mainOkvedDesc2 = mainOkvedDesc2[0].strip()
+    mainOkvedNum2 = mainOkvedNum2[0].strip()
+    print("Описание Оквэда: " + mainOkvedDesc2)
+    print("Оквэд: " + mainOkvedNum2)
+
+    if mainOkvedNum2:
+        try:
+            sql5 = "UPDATE eruz_member SET main_okved = %s, main_okved_desc = %s  WHERE id = %s"
+            my_cursor.execute(sql5, (mainOkvedNum2, mainOkvedDesc2, eruzRegistryID))
+        except:
+            print("Что-то пошло не так и главный ОКВЭД с опианием добавлен не был")
+            return None
+
 
 #### END RUSPROFILE FUNCTION
 
@@ -220,17 +310,13 @@ while startEruzNum < endEruzNum:
     try:
         # sauce = urllib.request.urlopen(eruzLink).read()
         headers = {'User-Agent': str(ua.random)}
-        response = requests.get(eruzLink, headers=headers, timeout=7)
-        wait = random.randint(1, 3)
-        time.sleep(wait)
+        response = requests.get(eruzLink, headers=headers, timeout=5)
 
     except requests.exceptions.Timeout:
         # time.sleep(10)
         # sauce = urllib.request.urlopen(eruzLink).read()
         headers = {'User-Agent': str(ua.random)}
-        response = requests.get(eruzLink, headers=headers, timeout=7)
-        wait = random.randint(1, 3)
-        time.sleep(wait)
+        response = requests.get(eruzLink, headers=headers, timeout=5)
 
     except:
         startEruzNum = startEruzNum + 1
